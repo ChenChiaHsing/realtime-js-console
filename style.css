@@ -1,0 +1,44 @@
+/* Layout */
+:root{
+  --bg:#0b1020; --fg:#e6edf3; --muted:#8b949e; --accent:#7c9a92; --border:#1f2436;
+  --red:#ff6b6b; --green:#7ec77b; --yellow:#ffd166; --blue:#6ca7ff; --purple:#c792ea;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:linear-gradient(180deg,#0b1020,#0e1426);
+  color:var(--fg);
+  font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden; /* keep exactly one page height; inner panes scroll */
+}
+
+.topbar{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#0f1530;border-bottom:1px solid var(--border)}
+.topbar h1{margin:0;font-size:16px}
+.controls{display:flex;gap:8px;align-items:center}
+.toggle{display:flex;gap:6px;align-items:center;color:var(--muted)}
+.btn{padding:6px 10px;border:1px solid var(--border);background:#131a3a;color:var(--fg);border-radius:8px;cursor:pointer}
+.btn:hover{filter:brightness(1.1)}
+.btn.ghost{background:transparent}
+
+.split{display:grid;grid-template-columns:1fr 1fr;flex:1 1 auto;min-height:0}
+.pane{display:flex;flex-direction:column;border-right:1px solid var(--border);min-height:0}
+.pane.right{border-right:none}
+.pane-title{padding:8px 12px;background:#0f1530;border-bottom:1px solid var(--border);color:var(--muted)}
+#editor{flex:1;width:100%;border:none;resize:none;background:#0c1226;color:var(--fg);padding:12px;font-size:14px;line-height:1.5;outline:none}
+.console{flex:1;padding:12px;background:#0a0f20;overflow:auto;font-family:inherit;white-space:pre-wrap;word-break:break-word}
+.console .line{padding:2px 0}
+.console .log{color:var(--fg)}
+.console .warn{color:var(--yellow)}
+.console .error{color:var(--red)}
+.console .info{color:var(--blue)}
+.footer{padding:8px 14px;color:var(--muted);border-top:1px solid var(--border);background:#0f1530}
+
+/* Small screens */
+@media (max-width: 860px){
+  .split{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+}

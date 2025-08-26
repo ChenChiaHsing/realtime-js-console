@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Realtime JS Console</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="main.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <h1>⚡ Realtime JS Console</h1>
+    <div class="controls">
+      <label class="toggle">
+        <input id="autoRun" type="checkbox" checked />
+        <span>Auto Run</span>
+      </label>
+  <button id="runBtn" class="btn">Run ▸</button>
+  <button id="exampleBtn" class="btn ghost">Example</button>
+    </div>
+  </header>
+
+  <main class="split">
+    <section class="pane left">
+      <div class="pane-title">JavaScript</div>
+      <textarea id="editor" spellcheck="false"></textarea>
+    </section>
+
+    <section class="pane right">
+      <div class="pane-title">Console</div>
+      <div id="console" class="console" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <footer class="footer">Each run clears the output (not accumulated). Executed in a sandboxed iframe. © 2025 NTUT Chen Chia Hsing</footer>
+</body>
+</html>
