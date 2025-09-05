@@ -8,6 +8,14 @@ Type JavaScript on the left; the console output appears on the right in real tim
 2. Click "Example" to load the initial sample code into the editor.
 3. Enable "Auto Run" to update on input, or click "Run" to execute manually.
 
+
+## Editor Features
+
+- **Tab / Shift+Tab**: Indent or outdent selected lines by 4 spaces.
+- **Auto bracket/quote pairing**: Typing (, [, {, ', ", or ` automatically inserts the matching closing character. If text is selected, it will be wrapped.
+- **Auto-indent on Enter**: Pressing Enter continues the previous line's indentation, and adds an extra indent after { [ ( .
+- **Auto-format on paste**: When pasting multi-line code, common leading indentation is removed and the code is aligned to the current line's indent.
+
 ## Notes
 - The iframe sandbox allows only scripts; it cannot modify the parent DOM and has no network access unless explicitly allowed.
 - Exceptions and unhandled promise rejections are shown on the right.
