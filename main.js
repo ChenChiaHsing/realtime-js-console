@@ -7,9 +7,10 @@ const runBtn = document.getElementById('runBtn');
 const exampleBtn = document.getElementById('exampleBtn');
 const saveBtn = document.getElementById('saveBtn');
 const loadBtn = document.getElementById('loadBtn');
+const exportBtn = document.getElementById('exportBtn');
 
 // Example code snippet
-const DEFAULT_CODE = `// Type your JavaScript here. It runs immediately, and output is cleared on every run.\nconsole.log('Hello', 'World');\nconsole.info('info message');\nconsole.warn('warning');\nconsole.error('something wrong?');\n\n// You can also use async/await\n(async () => {\n  await new Promise(r => setTimeout(r, 500));\n  console.log('done after 500ms');\n})();`;
+const DEFAULT_CODE = `// Type your JavaScript here. It runs immediately, and output is cleared on every run.\nconsole.log('Hello', 'World');\nconsole.info('info message');\nconsole.warn('warning');\nconsole.error('something wrong?');\n\n// You can also use async/await\n(async () => {\n    await new Promise(r => setTimeout(r, 500));\n    console.log('done after 500ms');\n})();`;
 
 // Start with an empty editor; user can insert the example via the Example button
 editor.value = '';
@@ -92,12 +93,27 @@ loadBtn.addEventListener('click', () => {
   if (autoRunEl.checked) run(); else clearConsole();
 });
 
+// Export current code as a .js file
+exportBtn.addEventListener('click', () => {
+  const code = editor.value || '';
+  const blob = new Blob([code], { type: 'text/javascript' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().replace(/[:T]/g,'-').replace(/\..+/, '');
+  a.href = url;
+  a.download = `code-${stamp}.js`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+});
+
 // Keyboard shortcuts
 // Ctrl/Cmd + Enter : Run
 // Ctrl/Cmd + S     : Save Cache
 // Ctrl/Cmd + L     : Load Cache (with confirmation)
 // Ctrl/Cmd + E     : Load Example (ask before overwrite if not empty)
 // Ctrl/Cmd + A     : Toggle Auto Run
+// Ctrl/Cmd + D     : Export JS
 window.addEventListener('keydown', (e) => {
   if (!(e.ctrlKey || e.metaKey)) return;
   const key = e.key.toLowerCase();
@@ -125,6 +141,10 @@ window.addEventListener('keydown', (e) => {
       e.preventDefault();
       autoRunEl.checked = !autoRunEl.checked;
       if (autoRunEl.checked) run();
+      break;
+    case 'd':
+      e.preventDefault();
+      exportBtn.click();
       break;
     default:
       break;

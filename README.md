@@ -17,6 +17,7 @@ Type JavaScript on the left; the console output appears on the right in real tim
 - **Auto-indent on Enter**: Pressing Enter continues the previous line's indentation, and adds an extra indent after { [ ( .
 - **Auto-format on paste**: When pasting multi-line code, common leading indentation is removed and the code is aligned to the current line's indent.
 - **Save Cache / Load Cache**: Persist the current editor content to `localStorage` and retrieve it later. Loading asks for confirmation before overwriting.
+- **Export JS**: Download the current editor content as a timestamped `.js` file.
 
 ## Keyboard Shortcuts
 
@@ -27,6 +28,7 @@ Type JavaScript on the left; the console output appears on the right in real tim
 | Ctrl / Cmd + L | Load Cache (confirmation) |
 | Ctrl / Cmd + E | Load Example (confirmation if editor not empty) |
 | Ctrl / Cmd + A | Toggle Auto Run |
+| Ctrl / Cmd + D | Export JS |
 
 ## Notes
 - The iframe sandbox allows only scripts; it cannot modify the parent DOM and has no network access unless explicitly allowed.
