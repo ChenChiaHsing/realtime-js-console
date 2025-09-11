@@ -5,6 +5,8 @@ const consoleEl = document.getElementById('console');
 const autoRunEl = document.getElementById('autoRun');
 const runBtn = document.getElementById('runBtn');
 const exampleBtn = document.getElementById('exampleBtn');
+const saveBtn = document.getElementById('saveBtn');
+const loadBtn = document.getElementById('loadBtn');
 
 // Example code snippet
 const DEFAULT_CODE = `// Type your JavaScript here. It runs immediately, and output is cleared on every run.\nconsole.log('Hello', 'World');\nconsole.info('info message');\nconsole.warn('warning');\nconsole.error('something wrong?');\n\n// You can also use async/await\n(async () => {\n  await new Promise(r => setTimeout(r, 500));\n  console.log('done after 500ms');\n})();`;
@@ -69,6 +71,26 @@ runBtn.addEventListener('click', run);
 exampleBtn.addEventListener('click', () => { editor.value = DEFAULT_CODE; if (autoRunEl.checked) run(); });
 editor.addEventListener('input', () => { if (autoRunEl.checked) run(); });
 autoRunEl.addEventListener('change', () => { if (autoRunEl.checked) run(); });
+
+// Save / Load cache (localStorage)
+const LS_KEY = 'realtime_console_code_v1';
+saveBtn.addEventListener('click', () => {
+  try {
+    localStorage.setItem(LS_KEY, editor.value);
+    const original = 'Save Cache';
+    saveBtn.textContent = 'Cached';
+    setTimeout(() => saveBtn.textContent = original, 1200);
+  } catch (err) {
+    alert('Cache save failed: ' + err);
+  }
+});
+loadBtn.addEventListener('click', () => {
+  const cached = localStorage.getItem(LS_KEY);
+  if (cached == null) { alert('No cached code found.'); return; }
+  if (!confirm('Loading cached code will overwrite current content. Continue?')) return;
+  editor.value = cached;
+  if (autoRunEl.checked) run(); else clearConsole();
+});
 
 // Handle Tab indentation inside textarea (insert 4 spaces; support multi-line & Shift+Tab)
 editor.addEventListener('keydown', (e) => {
