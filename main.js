@@ -92,6 +92,45 @@ loadBtn.addEventListener('click', () => {
   if (autoRunEl.checked) run(); else clearConsole();
 });
 
+// Keyboard shortcuts
+// Ctrl/Cmd + Enter : Run
+// Ctrl/Cmd + S     : Save Cache
+// Ctrl/Cmd + L     : Load Cache (with confirmation)
+// Ctrl/Cmd + E     : Load Example (ask before overwrite if not empty)
+// Ctrl/Cmd + A     : Toggle Auto Run
+window.addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey)) return;
+  const key = e.key.toLowerCase();
+  switch (key) {
+    case 'enter':
+      e.preventDefault();
+      run();
+      break;
+    case 's':
+      e.preventDefault();
+      saveBtn.click();
+      break;
+    case 'l':
+      e.preventDefault();
+      loadBtn.click();
+      break;
+    case 'e':
+      e.preventDefault();
+      if (editor.value && editor.value.trim() && editor.value !== DEFAULT_CODE) {
+        if (!confirm('Load example code and overwrite current content?')) return;
+      }
+      exampleBtn.click();
+      break;
+    case 'a':
+      e.preventDefault();
+      autoRunEl.checked = !autoRunEl.checked;
+      if (autoRunEl.checked) run();
+      break;
+    default:
+      break;
+  }
+});
+
 // Handle Tab indentation inside textarea (insert 4 spaces; support multi-line & Shift+Tab)
 editor.addEventListener('keydown', (e) => {
   if (e.key !== 'Tab') return;
