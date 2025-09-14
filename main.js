@@ -8,6 +8,7 @@ const exampleBtn = document.getElementById('exampleBtn');
 const saveBtn = document.getElementById('saveBtn');
 const loadBtn = document.getElementById('loadBtn');
 const exportBtn = document.getElementById('exportBtn');
+const highlightEl = document.getElementById('highlight');
 
 // Example code snippet
 const DEFAULT_CODE = `// Type your JavaScript here. It runs immediately, and output is cleared on every run.\nconsole.log('Hello', 'World');\nconsole.info('info message');\nconsole.warn('warning');\nconsole.error('something wrong?');\n\n// You can also use async/await\n(async () => {\n    await new Promise(r => setTimeout(r, 500));\n    console.log('done after 500ms');\n})();`;
@@ -69,9 +70,9 @@ function run() {
 
 // Wire up UI event listeners
 runBtn.addEventListener('click', run);
-exampleBtn.addEventListener('click', () => { editor.value = DEFAULT_CODE; if (autoRunEl.checked) run(); });
-editor.addEventListener('input', () => { if (autoRunEl.checked) run(); });
-autoRunEl.addEventListener('change', () => { if (autoRunEl.checked) run(); });
+exampleBtn.addEventListener('click', () => { editor.value = DEFAULT_CODE; if (autoRunEl.checked) run(); scheduleHighlight(); });
+editor.addEventListener('input', () => { if (autoRunEl.checked) run(); scheduleHighlight(); });
+autoRunEl.addEventListener('change', () => { if (autoRunEl.checked) run(); scheduleHighlight(); });
 
 // Save / Load cache (localStorage)
 const LS_KEY = 'realtime_console_code_v1';
@@ -91,6 +92,7 @@ loadBtn.addEventListener('click', () => {
   if (!confirm('Loading cached code will overwrite current content. Continue?')) return;
   editor.value = cached;
   if (autoRunEl.checked) run(); else clearConsole();
+  scheduleHighlight();
 });
 
 // Export current code as a .js file
@@ -105,6 +107,7 @@ exportBtn.addEventListener('click', () => {
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
+  scheduleHighlight();
 });
 
 // Keyboard shortcuts
@@ -150,6 +153,72 @@ window.addEventListener('keydown', (e) => {
       break;
   }
 });
+
+// --- Syntax Highlighting ---
+function highlight(code) {
+  if (!code) return '';
+  // 先 escape html，避免任何字元被破壞
+  code = code.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  // 用一個陣列存所有 token
+  const tokens = [];
+  // helper: 產生唯一 placeholder
+  let tid = 0;
+  function mark(type, val) {
+    const id = `__TOK${tid++}__`;
+    tokens.push({id, type, val});
+    return id;
+  }
+  // block comments
+  code = code.replace(/\/\*[\s\S]*?\*\//g, m => mark('com', m));
+  // line comments
+  code = code.replace(/(^|\n)(\s*\/\/.*)/g, (m, p1, c) => p1 + mark('com', c));
+  // strings (允許任意非結尾引號的字元，包括中文)
+  code = code.replace(/(["'`])((?:[^\\\1\r\n]|\\[\s\S])*)\1/g, (m, q, body) => mark('str', q + body + q));
+  // numbers
+  code = code.replace(/\b(0x[0-9a-fA-F]+|\d+(?:\.\d+)?(?:e[+-]?\d+)?)\b/g, m => mark('num', m));
+  // keywords
+  code = code.replace(/\b(const|let|var|function|return|if|else|for|while|break|continue|switch|case|default|try|catch|finally|throw|new|class|extends|super|import|from|export|async|await|yield|in|of|delete|typeof|instanceof)\b/g, m => mark('kw', m));
+  // builtins
+  code = code.replace(/\b(console|Math|Date|JSON|Array|Object|Promise|window|document|Error|Number|String|Boolean|Set|Map)\b/g, m => mark('bi', m));
+  // 最後再把 token 還原成 span
+  for (const t of tokens) {
+    let html = '';
+    switch(t.type) {
+      case 'com': html = `<span class="tok-com">${t.val}</span>`; break;
+      case 'str': html = `<span class="tok-str">${t.val}</span>`; break;
+      case 'num': html = `<span class="tok-num">${t.val}</span>`; break;
+      case 'kw': html = `<span class="tok-kw">${t.val}</span>`; break;
+      case 'bi': html = `<span class="tok-builtin">${t.val}</span>`; break;
+      default: html = t.val;
+    }
+    // 注意：token 內容已經 escape 過 html，不會有 XSS
+    code = code.split(t.id).join(html);
+  }
+  return code;
+}
+
+function refreshHighlight(){
+  if(!highlightEl) return;
+  const code = editor.value.endsWith('\n') ? editor.value + ' ' : editor.value;
+  highlightEl.innerHTML = '<code>' + highlight(code) + '</code>';
+  highlightEl.scrollTop = editor.scrollTop;
+  highlightEl.scrollLeft = editor.scrollLeft;
+}
+
+let highlightPending = false;
+
+function scheduleHighlight(){
+  if(highlightPending) return;
+  highlightPending = true;
+  requestAnimationFrame(()=>{ highlightPending = false; refreshHighlight(); });
+}
+
+editor.addEventListener('scroll', () => {
+  if(!highlightEl) return;
+  highlightEl.scrollTop = editor.scrollTop;
+  highlightEl.scrollLeft = editor.scrollLeft;
+});
+refreshHighlight();
 
 // Handle Tab indentation inside textarea (insert 4 spaces; support multi-line & Shift+Tab)
 editor.addEventListener('keydown', (e) => {
@@ -220,56 +289,51 @@ editor.addEventListener('keydown', (e) => {
     }
   }
   if (autoRunEl.checked) run(); // keep live behavior
+  scheduleHighlight();
 });
 
-// Auto bracket/quote pairing & navigation
+// Auto bracket/quote pairing & navigation（只在有選取文字時自動包裹，否則不自動補對，undo/redo 完全原生）
+const openToClose = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'", '`': '`' };
+const closers = new Set(Object.values(openToClose));
 editor.addEventListener('keydown', (e) => {
-  const openToClose = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'", '`': '`' };
-  const closers = new Set(Object.values(openToClose));
-  const { selectionStart: start, selectionEnd: end, value } = editor;
-
-  // Wrap selection or insert pair
+  // 只在有選取文字時自動包裹
   if (openToClose[e.key]) {
-    e.preventDefault();
-    const close = openToClose[e.key];
-    const before = value.slice(0, start);
-    const selected = value.slice(start, end);
-    const after = value.slice(end);
-    if (selected) {
-  // Wrap selection
-      editor.value = before + e.key + selected + close + after;
-      editor.selectionStart = start + 1; // keep selection inside
-      editor.selectionEnd = end + 1;
-    } else {
-  // Insert empty pair and place caret between
-      editor.value = before + e.key + close + after;
-      editor.selectionStart = editor.selectionEnd = start + 1;
-    }
-    if (autoRunEl.checked) run();
-    return;
-  }
-
-  // Skip over existing closer if the next char already matches
-  if (closers.has(e.key)) {
-    if (start === end && value.slice(start, start + 1) === e.key) {
+    const { selectionStart: start, selectionEnd: end, value } = editor;
+    if (start !== end) {
       e.preventDefault();
-      editor.selectionStart = editor.selectionEnd = start + 1;
-      return;
+      const close = openToClose[e.key];
+      editor.setRangeText(e.key + value.slice(start, end) + close, start, end, 'select');
+      editor.selectionStart = start + 1;
+      editor.selectionEnd = end + 1;
+      if (autoRunEl.checked) run();
+      scheduleHighlight();
     }
   }
+});
 
-  // Backspace deletes pair if empty between
-  if (e.key === 'Backspace') {
-    if (start === end && start > 0 && start < value.length) {
-      const prev = value[start - 1];
-      const next = value[start];
-      if (openToClose[prev] === next) {
-        e.preventDefault();
-        editor.value = value.slice(0, start - 1) + value.slice(start + 1);
-        editor.selectionStart = editor.selectionEnd = start - 1;
-        if (autoRunEl.checked) run();
-      }
-    }
+// Backspace 刪除成對符號
+editor.addEventListener('keydown', (e) => {
+  if (e.key !== 'Backspace') return;
+  const { selectionStart: start, selectionEnd: end, value } = editor;
+  if (start !== end || start === 0 || start >= value.length) return;
+  const prev = value[start - 1];
+  const next = value[start];
+  if (openToClose[prev] === next) {
+    e.preventDefault();
+    editor.setRangeText('', start - 1, start + 1, 'start');
+    if (autoRunEl.checked) run();
+    scheduleHighlight();
+  }
+});
+
+// 跳過已存在的 close
+editor.addEventListener('keydown', (e) => {
+  if (!closers.has(e.key)) return;
+  const { selectionStart: start, selectionEnd: end, value } = editor;
+  if (start !== end) return;
+  if (value.slice(start, start + 1) === e.key) {
+    e.preventDefault();
+    editor.selectionStart = editor.selectionEnd = start + 1;
   }
 });
 
@@ -299,8 +363,8 @@ editor.addEventListener('keydown', (e) => {
     editor.selectionStart = editor.selectionEnd = start + insert.length;
   }
   if (autoRunEl.checked) run();
+  scheduleHighlight();
 });
-
 // Do not auto-run on load; waits for user input or Example/Run
 
 // Auto-format pasted code (basic indentation normalization)
@@ -333,4 +397,5 @@ editor.addEventListener('paste', (e) => {
   const newPos = before.length + formatted.length;
   editor.selectionStart = editor.selectionEnd = newPos;
   if (autoRunEl.checked) run();
+  scheduleHighlight();
 });

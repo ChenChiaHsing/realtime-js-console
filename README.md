@@ -13,7 +13,7 @@ Type JavaScript on the left; the console output appears on the right in real tim
 ## Editor Features
 
 - **Tab / Shift+Tab**: Indent or outdent selected lines by 4 spaces.
-- **Auto bracket/quote pairing**: Typing (, [, {, ', ", or ` automatically inserts the matching closing character. If text is selected, it will be wrapped.
+- **Auto bracket/quote pairing**: If text is selected, typing (, [, {, ', ", or ` will wrap the selection with matching brackets/quotes. When not selecting text, auto-pairing is disabled to ensure undo/redo (Ctrl+Z) works natively and smoothly.
 - **Auto-indent on Enter**: Pressing Enter continues the previous line's indentation, and adds an extra indent after { [ ( .
 - **Auto-format on paste**: When pasting multi-line code, common leading indentation is removed and the code is aligned to the current line's indent.
 - **Save Cache / Load Cache**: Persist the current editor content to `localStorage` and retrieve it later. Loading asks for confirmation before overwriting.

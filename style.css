@@ -20,6 +20,7 @@ body{
 .topbar{position:sticky;top:0;display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#0f1530;border-bottom:1px solid var(--border)}
 .topbar h1{margin:0;font-size:16px}
 .controls{display:flex;gap:8px;align-items:center}
+.controls .divider{width:1px;align-self:stretch;background:var(--border);margin:0 4px}
 .toggle{display:flex;gap:6px;align-items:center;color:var(--muted)}
 .btn{padding:6px 10px;border:1px solid var(--border);background:#131a3a;color:var(--fg);border-radius:8px;cursor:pointer}
 .btn:hover{filter:brightness(1.1)}
@@ -29,7 +30,17 @@ body{
 .pane{display:flex;flex-direction:column;border-right:1px solid var(--border);min-height:0}
 .pane.right{border-right:none}
 .pane-title{padding:8px 12px;background:#0f1530;border-bottom:1px solid var(--border);color:var(--muted)}
-#editor{flex:1;width:100%;border:none;resize:none;background:#0c1226;color:var(--fg);padding:12px;font-size:14px;line-height:1.5;outline:none}
+#editorWrap{position:relative;flex:1;min-height:0}
+#editorWrap pre,#editorWrap textarea{font:14px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;tab-size:4;-moz-tab-size:4}
+#editorWrap pre{position:absolute;inset:0;margin:0;overflow:auto;padding:12px;pointer-events:none;white-space:pre-wrap;word-break:normal;background:#0c1226;color:transparent}
+#editorWrap pre code{color:var(--fg)}
+#editor{position:absolute;inset:0;flex:1;width:100%;border:none;resize:none;background:transparent;color:transparent;caret-color:var(--fg);padding:12px;font-size:14px;line-height:1.5;outline:none;overflow:auto}
+#editor:focus{outline:1px solid #1d2950}
+#highlight .tok-kw{color:var(--purple)}
+#highlight .tok-str{color:var(--green)}
+#highlight .tok-num{color:var(--yellow)}
+#highlight .tok-com{color:#5c6370;font-style:italic}
+#highlight .tok-builtin{color:var(--blue)}
 .console{flex:1;padding:12px;background:#0a0f20;overflow:auto;font-family:inherit;white-space:pre-wrap;word-break:break-word}
 .console .line{padding:2px 0}
 .console .log{color:var(--fg)}

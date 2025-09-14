@@ -16,17 +16,22 @@
         <span>Auto Run</span>
       </label>
   <button id="runBtn" class="btn">Run ▸</button>
-  <button id="exampleBtn" class="btn ghost">Example</button>
+  <span class="divider" aria-hidden="true"></span>
   <button id="saveBtn" class="btn">Save Cache</button>
   <button id="loadBtn" class="btn ghost">Load Cache</button>
-  <button id="exportBtn" class="btn">Export JS</button>
+  <span class="divider" aria-hidden="true"></span>
+  <button id="exampleBtn" class="btn ghost">Example</button>
+  <button id="exportBtn" class="btn">Export JS File</button>
     </div>
   </header>
 
   <main class="split">
     <section class="pane left">
       <div class="pane-title">JavaScript</div>
-      <textarea id="editor" spellcheck="false"></textarea>
+      <div id="editorWrap">
+        <pre id="highlight" aria-hidden="true"><code></code></pre>
+        <textarea id="editor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
+      </div>
     </section>
 
     <section class="pane right">
