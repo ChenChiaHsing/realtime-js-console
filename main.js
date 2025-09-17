@@ -5,10 +5,14 @@ const consoleEl = document.getElementById('console');
 const autoRunEl = document.getElementById('autoRun');
 const runBtn = document.getElementById('runBtn');
 const exampleBtn = document.getElementById('exampleBtn');
+const clearBtn = document.getElementById('clearBtn');
 const saveBtn = document.getElementById('saveBtn');
 const loadBtn = document.getElementById('loadBtn');
 const exportBtn = document.getElementById('exportBtn');
 const highlightEl = document.getElementById('highlight');
+const editStampEl = document.getElementById('editStamp');
+const VERSION = '1.1.0';
+const BUILD_DATE = '2025-09-17';
 
 // Example code snippet
 const DEFAULT_CODE = `// Type your JavaScript here. It runs immediately, and output is cleared on every run.\nconsole.log('Hello', 'World');\nconsole.info('info message');\nconsole.warn('warning');\nconsole.error('something wrong?');\n\n// You can also use async/await\n(async () => {\n    await new Promise(r => setTimeout(r, 500));\n    console.log('done after 500ms');\n})();`;
@@ -110,12 +114,23 @@ exportBtn.addEventListener('click', () => {
   scheduleHighlight();
 });
 
+// Clear editor content button
+clearBtn.addEventListener('click', () => {
+  if (editor.value && editor.value.trim()) {
+    if (!confirm('Clear all code in editor? This cannot be undone.')) return;
+  }
+  editor.value = '';
+  clearConsole();
+  scheduleHighlight();
+  if (autoRunEl.checked) run();
+});
+
 // Keyboard shortcuts
 // Ctrl/Cmd + Enter : Run
 // Ctrl/Cmd + S     : Save Cache
 // Ctrl/Cmd + L     : Load Cache (with confirmation)
 // Ctrl/Cmd + E     : Load Example (ask before overwrite if not empty)
-// Ctrl/Cmd + A     : Toggle Auto Run
+// Ctrl/Cmd + A     : 在編輯區 -> 全選 (預設瀏覽器行為)；非編輯區 -> Toggle Auto Run
 // Ctrl/Cmd + D     : Export JS
 window.addEventListener('keydown', (e) => {
   if (!(e.ctrlKey || e.metaKey)) return;
@@ -141,6 +156,8 @@ window.addEventListener('keydown', (e) => {
       exampleBtn.click();
       break;
     case 'a':
+      // 若焦點在 editor，交還給瀏覽器原生 Ctrl+A 全選
+      if (document.activeElement === editor) return; // 不攔截，讓瀏覽器全選
       e.preventDefault();
       autoRunEl.checked = !autoRunEl.checked;
       if (autoRunEl.checked) run();
@@ -149,10 +166,68 @@ window.addEventListener('keydown', (e) => {
       e.preventDefault();
       exportBtn.click();
       break;
+    case 'g':
+      // 僅在焦點為 editor 時生效
+      if (document.activeElement !== editor) return;
+      e.preventDefault();
+      const { selectionStart: gs, selectionEnd: ge, value: gv } = editor;
+      const selectedText = gv.slice(gs, ge);
+      const snippet = selectedText
+        ? `console.log(${selectedText});`
+        : 'console.log();';
+      editor.setRangeText(snippet, gs, ge, 'end');
+      // 將游標放在括號中間（若有選取則重新選取原本文字）
+      if (selectedText) {
+        const insideStart = gs + 'console.log('.length;
+        editor.selectionStart = insideStart;
+        editor.selectionEnd = insideStart + selectedText.length;
+      } else {
+        const caretInside = gs + 'console.log('.length;
+        editor.selectionStart = editor.selectionEnd = caretInside;
+      }
+      if (autoRunEl.checked) run();
+      scheduleHighlight();
+      break;
+    case '/':
+      // Ctrl+/ 註解/取消註解（需焦點在 editor）
+      if (document.activeElement !== editor) return;
+      e.preventDefault();
+      toggleComment();
+      break;
     default:
       break;
   }
 });
+
+// Toggle line comment for current selection / line
+function toggleComment(){
+  const { value, selectionStart, selectionEnd } = editor;
+  const lineStart = value.lastIndexOf('\n', selectionStart - 1) + 1; // -1 => -2? handled by +1
+  let lineEnd = value.indexOf('\n', selectionEnd);
+  if (lineEnd === -1) lineEnd = value.length;
+  const block = value.slice(lineStart, lineEnd);
+  const lines = block.split(/\n/);
+  // 判斷是否全部已是註解行（忽略空白）
+  const allCommented = lines.every(l => /^\s*\/\//.test(l) || l.trim() === '');
+  const updated = lines.map(l => {
+    if (l.trim() === '') return l; // 保持空行
+    if (allCommented) {
+      // 移除第一個 // （在前導空白之後）
+      return l.replace(/^(\s*)\/\//, '$1');
+    } else {
+      // 加上 // 於前導空白後
+      return l.replace(/^(\s*)/, '$1//');
+    }
+  }).join('\n');
+  const before = value.slice(0, lineStart);
+  const after = value.slice(lineEnd);
+  editor.value = before + updated + after;
+  // 調整選取範圍：保留整個更新後區塊
+  editor.selectionStart = lineStart;
+  editor.selectionEnd = lineStart + updated.length;
+  if (autoRunEl.checked) run();
+  scheduleHighlight();
+}
 
 // --- Syntax Highlighting ---
 function highlight(code) {
@@ -212,6 +287,8 @@ function scheduleHighlight(){
   highlightPending = true;
   requestAnimationFrame(()=>{ highlightPending = false; refreshHighlight(); });
 }
+// 固定顯示版本
+if (editStampEl) editStampEl.textContent = 'Version: ' + VERSION + " (" + BUILD_DATE + ")";
 
 editor.addEventListener('scroll', () => {
   if(!highlightEl) return;
@@ -300,6 +377,7 @@ editor.addEventListener('keydown', (e) => {
   if (openToClose[e.key]) {
     const { selectionStart: start, selectionEnd: end, value } = editor;
     if (start !== end) {
+      // 包裹選取內容
       e.preventDefault();
       const close = openToClose[e.key];
       editor.setRangeText(e.key + value.slice(start, end) + close, start, end, 'select');
@@ -307,6 +385,23 @@ editor.addEventListener('keydown', (e) => {
       editor.selectionEnd = end + 1;
       if (autoRunEl.checked) run();
       scheduleHighlight();
+    } else {
+      // 無選取內容時自動補成對符號並將游標置中
+      const close = openToClose[e.key];
+      const next = value[start];
+      const prev = value[start - 1];
+      // 若下一個字元已是空白/結束/關閉符號/換行，才自動補；否則（如在單字中間）就不補
+      const shouldPair = !next || /[\s\]\)\}\,;:.]/.test(next);
+      // 對於引號，若前面是跳脫符號則不自動補，避免在字串內新增多餘引號
+      const escapedQuote = (e.key === '"' || e.key === "'" || e.key === '`') && prev === '\\';
+      if (shouldPair && !escapedQuote) {
+        e.preventDefault();
+        editor.setRangeText(e.key + close, start, start, 'end');
+        // caret 移到中間
+        editor.selectionStart = editor.selectionEnd = start + 1;
+        if (autoRunEl.checked) run();
+        scheduleHighlight();
+      }
     }
   }
 });
