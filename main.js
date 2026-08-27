@@ -12,8 +12,8 @@ const exportBtn = document.getElementById('exportBtn');
 const highlightEl = document.getElementById('highlight');
 const editStampEl = document.getElementById('editStamp');
 const autocompleteEl = document.getElementById('autocomplete');
-const VERSION = '1.1.0';
-const BUILD_DATE = '2025-09-17';
+const VERSION = '1.2.0';
+const BUILD_DATE = '2026-08-27';
 
 // Example code snippet
 const DEFAULT_CODE = `// Type your JavaScript here. It runs immediately, and output is cleared on every run.\nconsole.log('Hello', 'World');\nconsole.info('info message');\nconsole.warn('warning');\nconsole.error('something wrong?');\n\n// You can also use async/await\n(async () => {\n    await new Promise(r => setTimeout(r, 500));\n    console.log('done after 500ms');\n})();`;
