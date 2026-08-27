@@ -53,5 +53,8 @@ body{
 
 /* Small screens */
 @media (max-width: 860px){
+  .topbar{align-items:flex-start;flex-wrap:wrap;gap:8px}
+  .controls{flex:1 1 100%;flex-wrap:wrap}
+  .controls .divider{width:100%;height:1px;align-self:auto;margin:0}
   .split{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
 }

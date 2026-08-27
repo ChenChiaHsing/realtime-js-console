@@ -54,7 +54,7 @@ function format(v) {
 // Listen for messages from the sandboxed iframe
 window.addEventListener('message', (e) => {
   const data = e.data;
-  if (!data || !data.__fromSandbox) return;
+  if (!data || !data.__fromSandbox || e.source !== iframe?.contentWindow) return;
   printLine(data.type || 'log', ...(data.args || []));
 });
 
@@ -63,19 +63,24 @@ function run() {
   createSandbox();
   // Ensure the iframe is ready before sending code
   const send = () => iframe && iframe.contentWindow && iframe.contentWindow.postMessage({ __runCode: true, code: editor.value }, '*');
-  if (iframe.contentWindow) {
-    // If already available, queue to next tick to let script init
-    setTimeout(send, 0);
-  }
   iframe.addEventListener('load', () => {
     send();
   }, { once: true });
 }
 
+let autoRunTimer = null;
+function scheduleAutoRun() {
+  clearTimeout(autoRunTimer);
+  autoRunTimer = setTimeout(() => {
+    autoRunTimer = null;
+    if (autoRunEl.checked) run();
+  }, 250);
+}
+
 // Wire up UI event listeners
 runBtn.addEventListener('click', run);
 exampleBtn.addEventListener('click', () => { editor.value = DEFAULT_CODE; if (autoRunEl.checked) run(); scheduleHighlight(); });
-editor.addEventListener('input', () => { if (autoRunEl.checked) run(); scheduleHighlight(); });
+editor.addEventListener('input', () => { scheduleAutoRun(); scheduleHighlight(); });
 autoRunEl.addEventListener('change', () => { if (autoRunEl.checked) run(); scheduleHighlight(); });
 
 // Save / Load cache (localStorage)
