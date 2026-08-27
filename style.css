@@ -31,10 +31,10 @@ body{
 .pane.right{border-right:none}
 .pane-title{padding:8px 12px;background:#0f1530;border-bottom:1px solid var(--border);color:var(--muted)}
 #editorWrap{position:relative;flex:1;min-height:0}
-#editorWrap pre,#editorWrap textarea{font:14px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;tab-size:4;-moz-tab-size:4}
-#editorWrap pre{position:absolute;inset:0;margin:0;overflow:auto;padding:12px;pointer-events:none;white-space:pre-wrap;word-break:normal;background:#0c1226;color:transparent}
-#editorWrap pre code{color:var(--fg)}
-#editor{position:absolute;inset:0;flex:1;width:100%;border:none;resize:none;background:transparent;color:transparent;caret-color:var(--fg);padding:12px;font-size:14px;line-height:1.5;outline:none;overflow:auto}
+#editorWrap pre,#editorWrap textarea{font:14px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;tab-size:4;-moz-tab-size:4;letter-spacing:0;font-variant-ligatures:none;font-feature-settings:"liga" 0}
+#editorWrap pre{position:absolute;inset:0;margin:0;overflow:auto;padding:12px;pointer-events:none;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word;background:#0c1226;color:transparent}
+#editorWrap pre code{font:inherit;color:var(--fg)}
+#editor{position:absolute;inset:0;flex:1;width:100%;border:none;resize:none;background:transparent;color:transparent;caret-color:var(--fg);padding:12px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word;outline:none;overflow:auto}
 #editor:focus{outline:1px solid #1d2950}
 #highlight .tok-kw{color:var(--purple)}
 #highlight .tok-str{color:var(--green)}

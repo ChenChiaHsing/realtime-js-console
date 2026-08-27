@@ -243,8 +243,9 @@ function highlight(code) {
   const tokens = [];
   // helper: 產生唯一 placeholder
   let tid = 0;
+  const tokenPrefix = `__RTJS_TOKEN_${Math.random().toString(36).slice(2)}_`;
   function mark(type, val) {
-    const id = `__TOK${tid++}__`;
+    const id = `${tokenPrefix}${tid++}__`;
     tokens.push({id, type, val});
     return id;
   }
