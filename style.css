@@ -36,6 +36,9 @@ body{
 #editorWrap pre code{font:inherit;color:var(--fg)}
 #editor{position:absolute;inset:0;flex:1;width:100%;border:none;resize:none;background:transparent;color:transparent;caret-color:var(--fg);padding:12px;font-size:16px;line-height:1.5;white-space:pre-wrap;word-break:normal;overflow-wrap:break-word;outline:none;overflow:auto}
 #editor:focus{outline:1px solid #1d2950}
+#autocomplete{position:absolute;z-index:2;left:12px;top:36px;width:min(240px,calc(100% - 24px));max-height:200px;margin:0;padding:4px;overflow:auto;list-style:none;background:#151d3b;border:1px solid var(--border);border-radius:6px;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+#autocomplete li{padding:4px 8px;color:var(--fg);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#autocomplete li[aria-selected="true"],#autocomplete li:hover{background:#26345e;color:#fff}
 #highlight .tok-kw{color:var(--purple)}
 #highlight .tok-str{color:var(--green)}
 #highlight .tok-num{color:var(--yellow)}

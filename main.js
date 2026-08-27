@@ -11,6 +11,7 @@ const loadBtn = document.getElementById('loadBtn');
 const exportBtn = document.getElementById('exportBtn');
 const highlightEl = document.getElementById('highlight');
 const editStampEl = document.getElementById('editStamp');
+const autocompleteEl = document.getElementById('autocomplete');
 const VERSION = '1.1.0';
 const BUILD_DATE = '2025-09-17';
 
@@ -76,6 +77,113 @@ function scheduleAutoRun() {
     if (autoRunEl.checked) run();
   }, 250);
 }
+
+const COMPLETIONS = [
+  'Array', 'async', 'await', 'Boolean', 'break', 'case', 'catch', 'class', 'console',
+  'const', 'continue', 'Date', 'delete', 'document', 'else', 'Error', 'export',
+  'false', 'finally', 'for', 'function', 'if', 'instanceof', 'JSON', 'let', 'Map',
+  'Math', 'new', 'Number', 'Object', 'of', 'Promise', 'return', 'Set', 'String',
+  'super', 'switch', 'throw', 'true', 'try', 'typeof', 'var', 'while', 'window',
+  'yield', 'filter', 'forEach', 'map', 'reduce', 'slice', 'trim', 'setTimeout'
+];
+const MEMBER_COMPLETIONS = {
+  console: ['log', 'info', 'warn', 'error', 'debug', 'table', 'time', 'timeEnd', 'clear']
+};
+let completionItems = [];
+let completionIndex = -1;
+
+function getCompletionContext() {
+  const start = editor.selectionStart;
+  if (start !== editor.selectionEnd) return null;
+  const before = editor.value.slice(0, start);
+  const memberMatch = /([A-Za-z_$][\w$]*)\.([A-Za-z_$][\w$]*)?$/.exec(before);
+  if (memberMatch && MEMBER_COMPLETIONS[memberMatch[1]]) {
+    const memberPrefix = memberMatch[2] || '';
+    return {wordStart: start - memberPrefix.length, prefix: memberPrefix};
+  }
+  const wordMatch = /[A-Za-z_$][\w$]*$/.exec(before);
+  return wordMatch ? {wordStart: start - wordMatch[0].length, prefix: wordMatch[0]} : null;
+}
+
+function closeAutocomplete() {
+  completionItems = [];
+  completionIndex = -1;
+  autocompleteEl.hidden = true;
+  autocompleteEl.replaceChildren();
+}
+
+function updateAutocomplete() {
+  const context = getCompletionContext();
+  if (!context) { closeAutocomplete(); return; }
+  const prefix = context.prefix.toLowerCase();
+  const before = editor.value.slice(0, editor.selectionStart);
+  const memberMatch = /([A-Za-z_$][\w$]*)\.[A-Za-z_$]*$/.exec(before);
+  const source = memberMatch && MEMBER_COMPLETIONS[memberMatch[1]]
+    ? MEMBER_COMPLETIONS[memberMatch[1]]
+    : COMPLETIONS;
+  completionItems = [...new Set(source)]
+    .filter(item => item.toLowerCase().startsWith(prefix) && item.toLowerCase() !== prefix)
+    .slice(0, 8);
+  if (!completionItems.length) { closeAutocomplete(); return; }
+
+  completionIndex = 0;
+  autocompleteEl.replaceChildren(...completionItems.map((item, index) => {
+    const option = document.createElement('li');
+    option.textContent = item;
+    option.setAttribute('role', 'option');
+    option.setAttribute('aria-selected', String(index === completionIndex));
+    option.addEventListener('mousedown', (event) => {
+      event.preventDefault();
+      applyCompletion(item);
+    });
+    return option;
+  }));
+  autocompleteEl.hidden = false;
+}
+
+function moveCompletion(delta) {
+  if (autocompleteEl.hidden || !completionItems.length) return false;
+  completionIndex = (completionIndex + delta + completionItems.length) % completionItems.length;
+  [...autocompleteEl.children].forEach((option, index) => {
+    option.setAttribute('aria-selected', String(index === completionIndex));
+  });
+  autocompleteEl.children[completionIndex].scrollIntoView({block: 'nearest'});
+  return true;
+}
+
+function applyCompletion(item) {
+  const context = getCompletionContext();
+  if (!context) { closeAutocomplete(); return; }
+  editor.setRangeText(item, context.wordStart, editor.selectionStart, 'end');
+  closeAutocomplete();
+  scheduleHighlight();
+  if (autoRunEl.checked) scheduleAutoRun();
+}
+
+editor.addEventListener('input', updateAutocomplete);
+editor.addEventListener('keydown', (event) => {
+  if (autocompleteEl.hidden) return;
+  if (event.key === 'ArrowDown') {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    moveCompletion(1);
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    moveCompletion(-1);
+  } else if (event.key === 'Enter' || event.key === 'Tab') {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    applyCompletion(completionItems[completionIndex]);
+  } else if (event.key === 'Escape') {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    closeAutocomplete();
+  }
+});
+editor.addEventListener('blur', () => {
+  setTimeout(closeAutocomplete, 0);
+});
 
 // Wire up UI event listeners
 runBtn.addEventListener('click', run);

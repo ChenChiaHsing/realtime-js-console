@@ -22,6 +22,7 @@ Type JavaScript on the left; the console output appears on the right in real tim
 - **Ctrl+G Quick Log**: Inserts `console.log()`; wraps selection as `console.log(selection);` and selects inside.
 - **Auto-indent on Enter**: Carries indentation and adds one extra level after `{ [ (`; smart block insertion when immediate next char is a closer.
 - **Auto-format on paste**: Normalizes multi-line indentation (detects common leading spaces; converts tabs to 4 spaces).
+- **JavaScript Autocomplete**: Type a JavaScript prefix to see matching keywords, built-ins, and common methods; use Arrow keys, Enter, or Tab to select.
 - **Clear Button**: Quickly empties the editor (with confirmation if non-empty) and clears console output.
 - **Cache Save / Load**: Persist editor content in `localStorage` (confirmation before overwrite when loading).
 - **Export JS**: Download current content as a timestamped `.js` file.
